@@ -1,10 +1,28 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Escape Room Test</title>
-  </head>
-  <body>
-    <h1>Hello, this is my first GitHub Page!</h1>
-    <p>If you see this, everything is working ✅</p>
-  </body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to Project1</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      color: #333;
+    }
+    p {
+      font-size: 18px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1>🚀 Welcome to My First Website</h1>
+  <p>This site was published using GitHub Pages.</p>
+  <p>Repository name: <strong>project1</strong></p>
+</body>
 </html>
