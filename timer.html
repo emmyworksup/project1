@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Escape Room Timer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: black;
+      color: red;
+      font-size: 3em;
+    }
+  </style>
+</head>
+<body>
+  <div id="timer"></div>
+
+  <script>
+    // Set timer length (15 minutes = 900 seconds)
+    let duration = 15 * 60;
+
+    // Load saved time from localStorage if exists
+    let endTime = localStorage.getItem("escapeEndTime");
+
+    if (!endTime) {
+      endTime = Date.now() + duration * 1000;
+      localStorage.setItem("escapeEndTime", endTime);
+    }
+
+    function updateTimer() {
+      let now = Date.now();
+      let remaining = Math.floor((endTime - now) / 1000);
+
+      if (remaining <= 0) {
+        document.getElementById("timer").innerText = "TIME’S UP!";
+        // Later we’ll redirect to a "time’s up" page
+        localStorage.removeItem("escapeEndTime");
+      } else {
+        let minutes = Math.floor(remaining / 60);
+        let seconds = remaining % 60;
+        document.getElementById("timer").innerText =
+          minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+      }
+    }
+
+    setInterval(updateTimer, 1000);
+  </script>
+</body>
+</html>
