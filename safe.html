@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Safe Lock</title>
+  <style>
+    html,body {
+      height:100%;
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      background:#111;
+      color:#fff;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+    }
+    .box {
+      max-width:420px;
+      text-align:center;
+      padding:30px;
+    }
+    input {
+      font-size:1.6rem;
+      letter-spacing:10px;
+      padding:10px 12px;
+      border-radius:8px;
+      border:none;
+      text-align:center;
+      width:160px;
+    }
+    button {
+      margin-top:12px;
+      padding:10px 18px;
+      border-radius:8px;
+      border:none;
+      background:#ff8c00;
+      color:#fff;
+      cursor:pointer;
+      font-weight:700;
+    }
+    #msg {
+      margin-top:12px;
+      color:#ff6666;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>Enter 4-Digit Code</h2>
+    <input id="codeInput" maxlength="4" inputmode="numeric" placeholder="••••" />
+    <div><button id="submitBtn">Unlock</button></div>
+    <div id="msg"></div>
+  </div>
+
+  <script>
+    const CONFIG_PATH = 'config.json';
+    let cfg = null;
+
+    async function loadConfig(){
+      try {
+        const r = await fetch(CONFIG_PATH + '?t=' + Date.now());
+        cfg = await r.json();
+      } catch(e){
+        console.error('config load failed', e);
+        cfg = { safeCode: '1234', redirectSafeSuccess: '', redirectSafeFail: '' };
+      }
+    }
+
+    function showMessage(text, color='#ff6666'){
+      const el = document.getElementById('msg');
+      el.style.color = color;
+      el.innerText = text;
+    }
+
+    async function check(){
+      const val = document.getElementById('codeInput').value.trim();
+      if (!cfg) await loadConfig();
+      if (val === (cfg.safeCode || '1234')) {
+        showMessage('✅ Correct! Redirecting...', '#a3f7a3');
+        if (cfg.redirectSafeSuccess) {
+          window.location.href = cfg.redirectSafeSuccess;
+        }
+      } else {
+        if (cfg.redirectSafeFail) {
+          window.location.href = cfg.redirectSafeFail;
+        } else {
+          showMessage('❌ Wrong code, try again.');
+        }
+      }
+    }
+
+    (async function(){
+      await loadConfig();
+      document.getElementById('submitBtn').onclick = check;
+      document.getElementById('codeInput').addEventListener('keydown', function(e){
+        if (e.key === 'Enter') check();
+      });
+    })();
+  </script>
+</body>
+</html>
