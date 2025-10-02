@@ -5,67 +5,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Safe Lock</title>
   <style>
-    body {
-      margin:0;
-      font-family: 'Arial', sans-serif;
-      background: transparent; /* blends with Genially */
-      color:#333;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      height:100vh;
-    }
-    .box {
-      background:#fff;
-      border-radius:16px;
-      padding:30px 25px;
-      text-align:center;
-      box-shadow:0 4px 12px rgba(0,0,0,0.08);
-      max-width:380px;
-      width:100%;
-    }
-    h2 {
-      font-size:1.2rem;
-      font-weight:600;
-      margin-bottom:20px;
-      color:#222;
-    }
-    input {
-      font-size:1.4rem;
-      letter-spacing:8px;
-      padding:12px 10px;
-      border-radius:10px;
-      border:1px solid #ccc;
-      text-align:center;
-      width:160px;
-      outline:none;
-      transition:all 0.2s;
-    }
-    input:focus {
-      border-color:#5b9df9;
-      box-shadow:0 0 4px rgba(91,157,249,0.4);
-    }
-    button {
-      margin-top:16px;
-      padding:10px 20px;
-      border-radius:10px;
-      border:none;
-      background:#5b9df9;
-      color:#fff;
-      cursor:pointer;
-      font-weight:600;
-      font-size:1rem;
-      transition:background 0.2s;
-    }
-    button:hover {
-      background:#4687e0;
-    }
-    #msg {
-      margin-top:14px;
-      font-size:0.95rem;
-      font-weight:500;
-      color:#d9534f;
-    }
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:transparent}
+    .box{background:#fff;border-radius:12px;padding:20px;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,0.08);max-width:380px;margin:30px auto}
+    h2{font-size:1.1rem;color:#222;margin:0 0 12px}
+    input{font-size:1.4rem;letter-spacing:8px;padding:10px;border-radius:8px;border:1px solid #ddd;text-align:center;width:160px}
+    button{margin-top:12px;padding:10px 16px;border-radius:8px;border:none;background:#5b9df9;color:#fff;cursor:pointer;font-weight:600}
+    #msg{margin-top:12px;color:#d9534f;font-weight:600}
   </style>
 </head>
 <body>
@@ -79,45 +24,37 @@
   <script>
     const CONFIG_PATH = 'config.json';
     let cfg = null;
-
     async function loadConfig(){
       try {
         const r = await fetch(CONFIG_PATH + '?t=' + Date.now());
         cfg = await r.json();
       } catch(e){
-        cfg = { safeCode: '1234', redirectSafeSuccess: '', redirectSafeFail: '' };
+        cfg = { safeCode:'1234', redirectSafeSuccess:'', redirectSafeFail:'' };
       }
     }
-
-    function showMessage(text, color='#d9534f'){
-      const el = document.getElementById('msg');
-      el.style.color = color;
-      el.innerText = text;
-    }
-
+    function showMessage(t,color='#d9534f'){const el=document.getElementById('msg');el.style.color=color;el.innerText=t;}
     async function check(){
-      const val = document.getElementById('codeInput').value.trim();
-      if (!cfg) await loadConfig();
-      if (val === (cfg.safeCode || '1234')) {
+      const val=document.getElementById('codeInput').value.trim();
+      if(!cfg) await loadConfig();
+      if(val === String(cfg.safeCode || '1234')){
         showMessage('✅ Correct! Redirecting...', '#28a745');
-        if (cfg.redirectSafeSuccess) {
-          window.location.href = cfg.redirectSafeSuccess;
+        if(cfg.redirectSafeSuccess){
+          try{ top.location.href = cfg.redirectSafeSuccess; }
+          catch(e){ window.location.href = cfg.redirectSafeSuccess; }
         }
       } else {
-        if (cfg.redirectSafeFail) {
-          window.location.href = cfg.redirectSafeFail;
+        if(cfg.redirectSafeFail){
+          try{ top.location.href = cfg.redirectSafeFail; }
+          catch(e){ window.location.href = cfg.redirectSafeFail; }
         } else {
           showMessage('❌ Wrong code, try again.');
         }
       }
     }
-
     (async function(){
       await loadConfig();
       document.getElementById('submitBtn').onclick = check;
-      document.getElementById('codeInput').addEventListener('keydown', function(e){
-        if (e.key === 'Enter') check();
-      });
+      document.getElementById('codeInput').addEventListener('keydown', function(e){ if(e.key==='Enter') check(); });
     })();
   </script>
 </body>
