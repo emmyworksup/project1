@@ -24,33 +24,68 @@
       background: #f9f9f9;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
+    .reset-btn {
+      margin-top: 20px;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 6px;
+      background: #444;
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <div class="timer" id="countdown"></div>
+  <div>
+    <div class="timer" id="countdown"></div>
+    <button id="resetBtn" class="reset-btn">Reset Timer</button>
+  </div>
 
   <script>
-    // Set the countdown time in minutes
-    let timeInMinutes = 15;
-    let time = timeInMinutes * 60;
-
-    const countdownEl = document.getElementById("countdown");
-
-    function updateCountdown() {
-      const minutes = Math.floor(time / 60);
-      let seconds = time % 60;
-
-      seconds = seconds < 10 ? '0' + seconds : seconds;
-      countdownEl.innerHTML = `${minutes}:${seconds}`;
-      time--;
-
-      if (time < 0) {
-        clearInterval(timerInterval);
-        countdownEl.innerHTML = "TIME UP!";
+    async function loadConfig() {
+      try {
+        const response = await fetch("config.json");
+        return await response.json();
+      } catch (error) {
+        console.error("Error loading config.json", error);
+        return null;
       }
     }
 
-    let timerInterval = setInterval(updateCountdown, 1000);
+    loadConfig().then(config => {
+      if (!config) return;
+
+      let time = config.timerMinutes * 60;
+      const countdownEl = document.getElementById("countdown");
+      const resetBtn = document.getElementById("resetBtn");
+
+      function updateCountdown() {
+        const minutes = Math.floor(time / 60);
+        let seconds = time % 60;
+        seconds = seconds < 10 ? '0' + seconds : seconds;
+        countdownEl.innerHTML = `${minutes}:${seconds}`;
+        time--;
+
+        if (time < 0) {
+          clearInterval(timerInterval);
+          window.location.href = config.redirectTimeUp; // Redirect to Clemens’ Time Up page
+        }
+      }
+
+      let timerInterval = setInterval(updateCountdown, 1000);
+
+      // Reset button (for testing)
+      if (config.showResetButton) {
+        resetBtn.style.display = "inline-block";
+        resetBtn.addEventListener("click", () => {
+          clearInterval(timerInterval);
+          time = config.timerMinutes * 60;
+          timerInterval = setInterval(updateCountdown, 1000);
+        });
+      }
+    });
   </script>
 </body>
 </html>
