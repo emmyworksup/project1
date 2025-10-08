@@ -1,139 +1,176 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Genially Style Safe Lock</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Safe Lock</title>
   <style>
     body {
       margin: 0;
       height: 100vh;
       display: flex;
-      justify-content: center;
       align-items: center;
-      background: #28a745; /* Green background */
-      font-family: "Poppins", sans-serif;
+      justify-content: center;
+      background: #ffffff; /* full background white */
+      font-family: 'Arial', sans-serif;
     }
 
     .safe-container {
-      background: #1e1e1e;
-      border-radius: 15px;
-      padding: 25px 30px;
-      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
       text-align: center;
-      color: #fff;
-      width: 250px;
+      background: #fff;
+      padding: 25px;
+      border-radius: 16px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      width: 320px;
+    }
+
+    h2 {
+      margin-bottom: 15px;
+      color: #222;
     }
 
     .display {
       width: 100%;
-      height: 40px;
-      background: #e9e9e9;
-      color: #111;
+      height: 45px;
       font-size: 1.5rem;
-      font-weight: bold;
       text-align: center;
+      border: 2px solid #222;
       border-radius: 8px;
-      margin-bottom: 15px;
-      line-height: 40px;
-      letter-spacing: 8px;
+      margin-bottom: 20px;
+      letter-spacing: 5px;
+      background: #ffffff; /* white display box */
+      color: #333;
+    }
+
+    .keypad-area {
+      background: #2ecc71; /* green square background */
+      padding: 20px;
+      border-radius: 12px;
     }
 
     .keypad {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
       justify-items: center;
     }
 
     .key {
-      width: 45px;
-      height: 45px;
+      width: 60px;
+      height: 60px;
+      border: none;
       border-radius: 50%;
-      background: black;
+      background: #000000; /* black circle */
       color: white;
       font-size: 1.2rem;
       font-weight: bold;
-      display: flex;
-      justify-content: center;
-      align-items: center;
       cursor: pointer;
-      transition: transform 0.1s ease, background 0.2s;
+      transition: transform 0.15s, background 0.2s;
     }
 
     .key:hover {
-      transform: scale(1.1);
-      background: #333;
+      transform: scale(1.05);
+      background: #222;
     }
 
-    .message {
-      margin-top: 10px;
+    .actions {
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .btn {
+      background: #444;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background: #222;
+    }
+
+    #msg {
+      margin-top: 15px;
       font-size: 0.9rem;
-      color: #f8d7da;
-      min-height: 18px;
+      color: #d33;
     }
   </style>
 </head>
 <body>
   <div class="safe-container">
-    <div class="display" id="display"></div>
-    <div class="keypad" id="keypad">
-      <div class="key">1</div>
-      <div class="key">2</div>
-      <div class="key">3</div>
-      <div class="key">4</div>
-      <div class="key">5</div>
-      <div class="key">6</div>
-      <div class="key">7</div>
-      <div class="key">8</div>
-      <div class="key">9</div>
-      <div class="key">0</div>
+    <h2>Enter 4-Digit Code</h2>
+    <input id="display" class="display" type="text" readonly maxlength="4" />
+
+    <div class="keypad-area">
+      <div class="keypad" id="keypad"></div>
     </div>
-    <div class="message" id="message"></div>
+
+    <div class="actions">
+      <button class="btn" id="clear">Clear</button>
+      <button class="btn" id="submit">Enter</button>
+    </div>
+
+    <div id="msg"></div>
   </div>
 
   <script>
-    // Fetch configuration file
-    fetch("config.json")
-      .then(response => response.json())
-      .then(config => {
-        const display = document.getElementById("display");
-        const keypad = document.getElementById("keypad");
-        const message = document.getElementById("message");
-        let inputCode = "";
+    const CONFIG_PATH = 'config.json';
+    let cfg = null;
+    const display = document.getElementById('display');
+    const keypad = document.getElementById('keypad');
+    const msg = document.getElementById('msg');
 
-        keypad.addEventListener("click", e => {
-          if (e.target.classList.contains("key")) {
-            if (inputCode.length < 4) {
-              inputCode += e.target.textContent;
-              display.textContent = inputCode;
-            }
+    const keys = ['1','2','3','4','5','6','7','8','9','0'];
+    keys.forEach(k => {
+      const btn = document.createElement('button');
+      btn.textContent = k;
+      btn.className = 'key';
+      btn.onclick = () => {
+        if (display.value.length < 4) display.value += k;
+      };
+      keypad.appendChild(btn);
+    });
 
-            if (inputCode.length === 4) {
-              if (inputCode === config.safeCode) {
-                message.textContent = "Access Granted!";
-                setTimeout(() => {
-                  window.top.location.href = config.redirectSafeSuccess;
-                }, 700);
-              } else {
-                message.textContent = "Incorrect Code!";
-                setTimeout(() => {
-                  if (config.redirectSafeFail) {
-                    window.top.location.href = config.redirectSafeFail;
-                  } else {
-                    inputCode = "";
-                    display.textContent = "";
-                    message.textContent = "";
-                  }
-                }, 700);
-              }
-            }
-          }
-        });
-      })
-      .catch(err => {
-        console.error("Error loading config:", err);
-      });
+    document.getElementById('clear').onclick = () => {
+      display.value = '';
+      msg.textContent = '';
+    };
+
+    document.getElementById('submit').onclick = checkCode;
+
+    async function loadConfig(){
+      try {
+        const r = await fetch(CONFIG_PATH + '?t=' + Date.now());
+        cfg = await r.json();
+      } catch(e){
+        cfg = { safeCode: '1234', redirectSafeSuccess: '', redirectSafeFail: '' };
+      }
+    }
+
+    async function checkCode(){
+      if (!cfg) await loadConfig();
+      const val = display.value.trim();
+      if (val === (cfg.safeCode || '1234')) {
+        msg.style.color = '#27ae60';
+        msg.textContent = '✅ Correct code! Redirecting...';
+        if (cfg.redirectSafeSuccess) {
+          window.location.href = cfg.redirectSafeSuccess;
+        }
+      } else {
+        msg.style.color = '#e74c3c';
+        msg.textContent = '❌ Wrong code!';
+        if (cfg.redirectSafeFail) {
+          window.location.href = cfg.redirectSafeFail;
+        }
+      }
+    }
+
+    loadConfig();
   </script>
 </body>
 </html>
