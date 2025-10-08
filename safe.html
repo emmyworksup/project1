@@ -1,61 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Safe Lock</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Genially Style Safe Lock</title>
   <style>
-    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:transparent}
-    .box{background:#fff;border-radius:12px;padding:20px;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,0.08);max-width:380px;margin:30px auto}
-    h2{font-size:1.1rem;color:#222;margin:0 0 12px}
-    input{font-size:1.4rem;letter-spacing:8px;padding:10px;border-radius:8px;border:1px solid #ddd;text-align:center;width:160px}
-    button{margin-top:12px;padding:10px 16px;border-radius:8px;border:none;background:#5b9df9;color:#fff;cursor:pointer;font-weight:600}
-    #msg{margin-top:12px;color:#d9534f;font-weight:600}
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #28a745; /* Green background */
+      font-family: "Poppins", sans-serif;
+    }
+
+    .safe-container {
+      background: #1e1e1e;
+      border-radius: 15px;
+      padding: 25px 30px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      color: #fff;
+      width: 250px;
+    }
+
+    .display {
+      width: 100%;
+      height: 40px;
+      background: #e9e9e9;
+      color: #111;
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-align: center;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      line-height: 40px;
+      letter-spacing: 8px;
+    }
+
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      justify-items: center;
+    }
+
+    .key {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background: black;
+      color: white;
+      font-size: 1.2rem;
+      font-weight: bold;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.1s ease, background 0.2s;
+    }
+
+    .key:hover {
+      transform: scale(1.1);
+      background: #333;
+    }
+
+    .message {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: #f8d7da;
+      min-height: 18px;
+    }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h2>Enter 4-Digit Code</h2>
-    <input id="codeInput" maxlength="4" inputmode="numeric" placeholder="••••" />
-    <div><button id="submitBtn">Unlock</button></div>
-    <div id="msg"></div>
+  <div class="safe-container">
+    <div class="display" id="display"></div>
+    <div class="keypad" id="keypad">
+      <div class="key">1</div>
+      <div class="key">2</div>
+      <div class="key">3</div>
+      <div class="key">4</div>
+      <div class="key">5</div>
+      <div class="key">6</div>
+      <div class="key">7</div>
+      <div class="key">8</div>
+      <div class="key">9</div>
+      <div class="key">0</div>
+    </div>
+    <div class="message" id="message"></div>
   </div>
 
   <script>
-    const CONFIG_PATH = 'config.json';
-    let cfg = null;
-    async function loadConfig(){
-      try {
-        const r = await fetch(CONFIG_PATH + '?t=' + Date.now());
-        cfg = await r.json();
-      } catch(e){
-        cfg = { safeCode:'1234', redirectSafeSuccess:'', redirectSafeFail:'' };
-      }
-    }
-    function showMessage(t,color='#d9534f'){const el=document.getElementById('msg');el.style.color=color;el.innerText=t;}
-    async function check(){
-      const val=document.getElementById('codeInput').value.trim();
-      if(!cfg) await loadConfig();
-      if(val === String(cfg.safeCode || '1234')){
-        showMessage('✅ Correct! Redirecting...', '#28a745');
-        if(cfg.redirectSafeSuccess){
-          try{ top.location.href = cfg.redirectSafeSuccess; }
-          catch(e){ window.location.href = cfg.redirectSafeSuccess; }
-        }
-      } else {
-        if(cfg.redirectSafeFail){
-          try{ top.location.href = cfg.redirectSafeFail; }
-          catch(e){ window.location.href = cfg.redirectSafeFail; }
-        } else {
-          showMessage('❌ Wrong code, try again.');
-        }
-      }
-    }
-    (async function(){
-      await loadConfig();
-      document.getElementById('submitBtn').onclick = check;
-      document.getElementById('codeInput').addEventListener('keydown', function(e){ if(e.key==='Enter') check(); });
-    })();
+    // Fetch configuration file
+    fetch("config.json")
+      .then(response => response.json())
+      .then(config => {
+        const display = document.getElementById("display");
+        const keypad = document.getElementById("keypad");
+        const message = document.getElementById("message");
+        let inputCode = "";
+
+        keypad.addEventListener("click", e => {
+          if (e.target.classList.contains("key")) {
+            if (inputCode.length < 4) {
+              inputCode += e.target.textContent;
+              display.textContent = inputCode;
+            }
+
+            if (inputCode.length === 4) {
+              if (inputCode === config.safeCode) {
+                message.textContent = "Access Granted!";
+                setTimeout(() => {
+                  window.top.location.href = config.redirectSafeSuccess;
+                }, 700);
+              } else {
+                message.textContent = "Incorrect Code!";
+                setTimeout(() => {
+                  if (config.redirectSafeFail) {
+                    window.top.location.href = config.redirectSafeFail;
+                  } else {
+                    inputCode = "";
+                    display.textContent = "";
+                    message.textContent = "";
+                  }
+                }, 700);
+              }
+            }
+          }
+        });
+      })
+      .catch(err => {
+        console.error("Error loading config:", err);
+      });
   </script>
 </body>
 </html>
