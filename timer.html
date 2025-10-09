@@ -33,7 +33,7 @@
     .time {
       font-size: 1.8rem;
       font-weight: 700;
-      color: #000;
+      color: #008000; /* ✅ Green color restored */
       letter-spacing: 1px;
     }
     .small {
@@ -74,7 +74,7 @@
         const res = await fetch(CONFIG_PATH + '?t=' + Date.now());
         const j = await res.json();
         config = Object.assign(config, j || {});
-      } catch(e) {
+      } catch (e) {
         console.warn('Could not load config.json, using defaults', e);
       }
     }
@@ -82,7 +82,7 @@
     function formatMMSS(totalSec) {
       const m = Math.floor(totalSec / 60);
       const s = totalSec % 60;
-      return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+      return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
     }
 
     function setEndFromNow() {
@@ -103,7 +103,7 @@
         document.getElementById('resetBtn').style.display = 'inline-block';
       }
 
-      document.getElementById('resetBtn').onclick = function() {
+      document.getElementById('resetBtn').onclick = function () {
         setEndFromNow();
         document.getElementById('status').innerText = 'Timer reset';
       };
@@ -120,16 +120,22 @@
         localStorage.removeItem(STORAGE_KEY);
         document.getElementById('minutes').innerText = '00:00';
         document.getElementById('status').innerText = "TIME'S UP!";
+
         if (config.redirectTimeUp) {
-          // ✅ Force full-page redirect (not inside Genially iframe)
-          window.top.location.href = config.redirectTimeUp;
+          try {
+            // ✅ Genially-safe redirect
+            window.open(config.redirectTimeUp, "_top");
+          } catch (e) {
+            // Fallback inside iframe
+            window.location.href = config.redirectTimeUp;
+          }
         }
         return;
       }
       document.getElementById('minutes').innerText = formatMMSS(remaining);
     }
 
-    (async function(){
+    (async function () {
       await loadConfig();
       initTimer();
     })();
