@@ -33,7 +33,7 @@
     .time {
       font-size: 1.8rem;
       font-weight: 700;
-      color: #008000; /* ✅ Green color restored */
+      color: #008000; /* ✅ Green color preserved */
       letter-spacing: 1px;
     }
     .small {
@@ -59,6 +59,10 @@
       <div class="time" id="minutes">--:--</div>
       <div class="small" id="status"></div>
       <button id="resetBtn" class="reset">Reset</button>
+      <!-- 🔊 Hidden audio element -->
+      <audio id="timeUpSound" preload="auto">
+        <source src="https://cdn.pixabay.com/download/audio/2021/09/20/audio_70c7d6c272.mp3?filename=beep-warning-6387.mp3" type="audio/mpeg">
+      </audio>
     </div>
   </div>
 
@@ -115,23 +119,31 @@
     function tick() {
       const now = Date.now();
       const remaining = Math.floor((endTime - now) / 1000);
+
       if (remaining <= 0) {
         clearInterval(intervalId);
         localStorage.removeItem(STORAGE_KEY);
         document.getElementById('minutes').innerText = '00:00';
         document.getElementById('status').innerText = "TIME'S UP!";
 
-        if (config.redirectTimeUp) {
-          try {
-            // ✅ Genially-safe redirect
-            window.open(config.redirectTimeUp, "_top");
-          } catch (e) {
-            // Fallback inside iframe
-            window.location.href = config.redirectTimeUp;
+        // 🔊 Play sound
+        const audio = document.getElementById('timeUpSound');
+        audio.volume = 0.8;
+        audio.play().catch(() => console.log('Autoplay blocked'));
+
+        // ⏳ Delay redirect for 1.5 seconds
+        setTimeout(() => {
+          if (config.redirectTimeUp) {
+            try {
+              window.open(config.redirectTimeUp, "_top"); // Genially-safe
+            } catch (e) {
+              window.location.href = config.redirectTimeUp; // Fallback
+            }
           }
-        }
+        }, 1500);
         return;
       }
+
       document.getElementById('minutes').innerText = formatMMSS(remaining);
     }
 
