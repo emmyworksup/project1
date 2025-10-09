@@ -5,13 +5,51 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Escape Room Timer</title>
   <style>
-    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:transparent}
-    .wrap{display:flex;align-items:center;justify-content:center;width:100%;height:100%}
-    .box{background:#fff;border-radius:12px;padding:14px 18px;box-shadow:0 6px 18px rgba(0,0,0,0.08);text-align:center}
-    .label{font-size:0.85rem;color:#444;margin-bottom:6px;font-weight:600}
-    .time{font-size:1.6rem;font-weight:700;color:#222;letter-spacing:1px}
-    .small{font-size:0.78rem;color:#666;margin-top:8px}
-    button.reset{margin-top:8px;padding:6px 10px;border-radius:8px;border:1px solid #ddd;background:#f4f4f4;cursor:pointer;display:none}
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: white;
+    }
+    .wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100vh;
+    }
+    .box {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px 18px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    .label {
+      font-size: 0.9rem;
+      color: #333;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .time {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #000;
+      letter-spacing: 1px;
+    }
+    .small {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 8px;
+    }
+    button.reset {
+      margin-top: 8px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      background: #f4f4f4;
+      cursor: pointer;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -27,41 +65,35 @@
   <script>
     const CONFIG_PATH = 'config.json';
     const STORAGE_KEY = 'escapeRoomEndTime_v1';
-    let config = { timerMinutes: 15, redirectTimeUp: 'https://emmyworksup.github.io/project1/timeup.html', showResetButton: false };
+    let config = { timerMinutes: 15, redirectTimeUp: '', showResetButton: false };
     let endTime = null;
     let intervalId = null;
 
-    function formatMMSS(totalSec){
-      const m = Math.floor(totalSec/60);
-      const s = totalSec%60;
-      return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
-    }
-
-    function getQueryParam(name){
-      try { return new URL(window.location.href).searchParams.get(name); }
-      catch(e){ return null; }
-    }
-
-    async function loadConfig(){
+    async function loadConfig() {
       try {
         const res = await fetch(CONFIG_PATH + '?t=' + Date.now());
         const j = await res.json();
         config = Object.assign(config, j || {});
-      } catch(e){
+      } catch(e) {
         console.warn('Could not load config.json, using defaults', e);
       }
     }
 
-    function setEndFromNow(){
+    function formatMMSS(totalSec) {
+      const m = Math.floor(totalSec / 60);
+      const s = totalSec % 60;
+      return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    }
+
+    function setEndFromNow() {
       const mins = Number(config.timerMinutes) || 15;
       endTime = Date.now() + mins * 60 * 1000;
       localStorage.setItem(STORAGE_KEY, String(endTime));
     }
 
-    function initTimer(){
-      const reset = getQueryParam('reset');
+    function initTimer() {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (reset === '1' || !saved) {
+      if (!saved) {
         setEndFromNow();
       } else {
         endTime = Number(saved);
@@ -70,7 +102,8 @@
       if (config.showResetButton) {
         document.getElementById('resetBtn').style.display = 'inline-block';
       }
-      document.getElementById('resetBtn').onclick = function(){
+
+      document.getElementById('resetBtn').onclick = function() {
         setEndFromNow();
         document.getElementById('status').innerText = 'Timer reset';
       };
@@ -79,26 +112,17 @@
       intervalId = setInterval(tick, 1000);
     }
 
-    function tick(){
+    function tick() {
       const now = Date.now();
-      let remaining = Math.floor((endTime - now)/1000);
-      if (remaining <= 0){
+      const remaining = Math.floor((endTime - now) / 1000);
+      if (remaining <= 0) {
         clearInterval(intervalId);
         localStorage.removeItem(STORAGE_KEY);
         document.getElementById('minutes').innerText = '00:00';
         document.getElementById('status').innerText = "TIME'S UP!";
-
-        // ✅ Redirect FULL SCREEN (not inside Genially iframe)
         if (config.redirectTimeUp) {
-          try {
-            if (window.top !== window.self) {
-              window.top.location.href = config.redirectTimeUp;
-            } else {
-              window.location.href = config.redirectTimeUp;
-            }
-          } catch (e) {
-            window.location.href = config.redirectTimeUp;
-          }
+          // ✅ Force full-page redirect (not inside Genially iframe)
+          window.top.location.href = config.redirectTimeUp;
         }
         return;
       }
