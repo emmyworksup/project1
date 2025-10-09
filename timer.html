@@ -15,13 +15,13 @@
       align-items: center;
       justify-content: center;
       width: 100%;
-      height: 100vh;
+      height: 100%;
     }
     .box {
       background: #fff;
       border-radius: 12px;
       padding: 14px 18px;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
       text-align: center;
     }
     .label {
@@ -69,78 +69,63 @@
     let endTime = null;
     let intervalId = null;
 
-    function formatMMSS(totalSec){
+    function formatMMSS(totalSec) {
       const m = Math.floor(totalSec / 60);
       const s = totalSec % 60;
-      return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+      return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
     }
 
-    function getQueryParam(name){
-      try { return new URL(window.location.href).searchParams.get(name); }
-      catch(e){ return null; }
-    }
-
-    async function loadConfig(){
+    async function loadConfig() {
       try {
         const res = await fetch(CONFIG_PATH + '?t=' + Date.now());
         const j = await res.json();
         config = Object.assign(config, j || {});
-      } catch(e){
+      } catch (e) {
         console.warn('Could not load config.json, using defaults', e);
       }
     }
 
-    function setEndFromNow(){
+    function setEndFromNow() {
       const mins = Number(config.timerMinutes) || 15;
       endTime = Date.now() + mins * 60 * 1000;
       localStorage.setItem(STORAGE_KEY, String(endTime));
     }
 
-    function initTimer(){
-      const reset = getQueryParam('reset');
+    function initTimer() {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (reset === '1' || !saved) {
-        setEndFromNow();
-      } else {
-        endTime = Number(saved);
-      }
+      if (!saved) setEndFromNow();
+      else endTime = Number(saved);
 
       if (config.showResetButton) {
         document.getElementById('resetBtn').style.display = 'inline-block';
+        document.getElementById('resetBtn').onclick = () => {
+          setEndFromNow();
+          document.getElementById('status').innerText = 'Timer reset';
+        };
       }
-      document.getElementById('resetBtn').onclick = function(){
-        setEndFromNow();
-        document.getElementById('status').innerText = 'Timer reset';
-      };
 
-      tick(); // update immediately
+      tick();
       intervalId = setInterval(tick, 1000);
     }
 
-    function tick(){
+    function tick() {
       const now = Date.now();
-      let remaining = Math.floor((endTime - now)/1000);
-      if (remaining <= 0){
+      const remaining = Math.floor((endTime - now) / 1000);
+      if (remaining <= 0) {
         clearInterval(intervalId);
         localStorage.removeItem(STORAGE_KEY);
         document.getElementById('minutes').innerText = '00:00';
         document.getElementById('status').innerText = "TIME'S UP!";
-
-        // ✅ FULL REDIRECT FIX
-        if (config.redirectTimeUp){
-          try {
-            // Force full window redirect, not iframe
-            window.top.location.assign(config.redirectTimeUp);
-          } catch(e){
-            window.location.href = config.redirectTimeUp;
-          }
+        // Always force full-page redirect
+        if (config.redirectTimeUp) {
+          window.top.location.href = config.redirectTimeUp;
         }
         return;
       }
       document.getElementById('minutes').innerText = formatMMSS(remaining);
     }
 
-    (async function(){
+    (async function () {
       await loadConfig();
       initTimer();
     })();
