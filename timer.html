@@ -1,37 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Countdown Timer</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Timer</title>
   <style>
-    body {
-      background-color: #000;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
+    /* Small transparent black box, white text — Genially-like */
+    :root { --box-bg: rgba(0,0,0,0.35); --text: #ffffff; --radius: 8px; --padding: 10px 14px; --font: 16px/1 "Arial",sans-serif; }
+
+    html,body { height:100%; margin:0; background:transparent; }
+    #timerBox {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      background: var(--box-bg);
+      color: var(--text);
+      padding: var(--padding);
+      border-radius: var(--radius);
+      font: var(--font);
+      display: inline-flex;
       align-items: center;
-      height: 100vh;
-      text-align: center;
+      gap: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      z-index: 9999;
+      -webkit-font-smoothing:antialiased;
     }
-    #timer {
-      font-size: 5rem;
-      font-weight: bold;
-      color: #ff4444;
-    }
-    button {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 1rem;
-      cursor: pointer;
-    }
+    #minutes { font-weight: 700; font-size: 18px; letter-spacing: 1px; }
+    #status { display:none; font-size:12px; color: rgba(255,255,255,0.85); }
+    #resetBtn { display:none; background:transparent; border:1px solid rgba(255,255,255,0.12); color:var(--text); padding:6px 8px; border-radius:6px; cursor:pointer; font-size:12px; }
+    /* keep minimal, professional */
   </style>
 </head>
 <body>
-  <div id="timer">Loading...</div>
-  <button id="resetBtn" style="display:none;">Reset Timer</button>
+  <div id="timerBox" aria-live="polite" aria-atomic="true">
+    <div id="minutes">--:--</div>
+    <div id="status"></div>
+    <button id="resetBtn" type="button">Reset</button>
+  </div>
+
+  <!-- optional time-up sound (kept but neutral) -->
+  <audio id="timeUpSound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
 
   <script src="script.js"></script>
 </body>
