@@ -1,8 +1,8 @@
 {
   "safeCode": "1234",
-  "timerMinutes": 15,
+  "timerMinutes": 60,
   "redirectTimeUp": "https://view.genial.ly/68dd6dda2111e77036989535/interactive-content-escape-room-times-up-page",
   "redirectSafeSuccess": "https://view.genial.ly/68ddbb2a2111e77036ccc1b2/interactive-content-6000",
   "redirectSafeFail": "https://view.genial.ly/68e65823bbe2b29abd87762a/interactive-content-6000",
-  "showResetButton": true
+  "showResetButton": false
 }
