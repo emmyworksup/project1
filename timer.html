@@ -7,53 +7,28 @@
   <style>
     body {
       background: transparent;
-      color: #fff;
-      font-family: Arial, sans-serif;
+      color: white;
+      font-family: 'Arial', sans-serif;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
       margin: 0;
     }
-    #timerContainer {
-      background: rgba(0,0,0,0.6);
-      padding: 20px 40px;
-      border-radius: 15px;
-      text-align: center;
-      box-shadow: 0 0 15px rgba(255,255,255,0.2);
-    }
     #minutes {
-      font-size: 3rem;
+      font-size: 4rem;
       font-weight: bold;
-      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(255,255,255,0.6);
     }
     #status {
-      margin-top: 10px;
-      font-size: 1.1rem;
-      color: #ccc;
-    }
-    #resetBtn {
       display: none;
-      margin-top: 15px;
-      padding: 8px 16px;
-      font-size: 1rem;
-      border: none;
-      border-radius: 8px;
-      background: #008000;
-      color: white;
-      cursor: pointer;
-    }
-    #resetBtn:hover {
-      background: #00a000;
     }
   </style>
 </head>
 <body>
-  <div id="timerContainer">
-    <div id="minutes">00:00</div>
-    <div id="status">Timer starting...</div>
-    <button id="resetBtn">Reset Timer</button>
+  <div>
+    <div id="minutes">60:00</div>
+    <div id="status"></div>
   </div>
 
   <audio id="timeUpSound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
@@ -94,19 +69,11 @@
       } else {
         endTime = Number(saved);
       }
-
-      if (config.showResetButton) {
-        document.getElementById('resetBtn').style.display = 'inline-block';
-        document.getElementById('resetBtn').onclick = function () {
-          setEndFromNow();
-          document.getElementById('status').innerText = 'Timer reset';
-        };
-      }
-
       tick();
       intervalId = setInterval(tick, 1000);
     }
 
+    // ✅ Safe redirect for Genially iframe
     function redirectTo(url) {
       try {
         if (window.top !== window.self) {
@@ -115,7 +82,6 @@
           window.location.href = url;
         }
       } catch (err) {
-        console.log("Redirect blocked by sandbox. Showing manual link...");
         document.body.innerHTML = `
           <div style="display:flex;align-items:center;justify-content:center;height:100vh;text-align:center;">
             <div>
@@ -135,12 +101,12 @@
         clearInterval(intervalId);
         localStorage.removeItem(STORAGE_KEY);
         document.getElementById('minutes').innerText = '00:00';
-        document.getElementById('status').innerText = "TIME'S UP!";
 
         const audio = document.getElementById('timeUpSound');
         audio.volume = 0.9;
         audio.play().catch(() => console.log('Autoplay blocked'));
 
+        // ⏰ Redirect to Time's Up page
         setTimeout(() => {
           if (config.redirectTimeUp) redirectTo(config.redirectTimeUp);
         }, 2000);
@@ -148,7 +114,6 @@
       }
 
       document.getElementById('minutes').innerText = formatMMSS(remaining);
-      document.getElementById('status').innerText = "Counting down...";
     }
 
     (async function () {
