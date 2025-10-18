@@ -1,17 +1,19 @@
 <script>
-  const CONFIG_PATH = 'config.json';
+  const CONFIG_PATH = 'config.json'; // config file (same folder as timer.html)
   const STORAGE_KEY = 'escapeRoomEndTime_v1';
   let config = { timerMinutes: 60, redirectTimeUp: '', showResetButton: false };
   let endTime = null;
   let intervalId = null;
 
+  // ✅ Load settings from config.json
   async function loadConfig() {
     try {
       const res = await fetch(CONFIG_PATH + '?t=' + Date.now());
       const j = await res.json();
       config = Object.assign(config, j || {});
+      console.log('✅ Config loaded:', config);
     } catch (e) {
-      console.warn('Could not load config.json, using defaults', e);
+      console.warn('⚠️ Could not load config.json, using defaults', e);
     }
   }
 
@@ -22,7 +24,7 @@
   }
 
   function setEndFromNow() {
-    const mins = Number(config.timerMinutes) || 60; // default 60 min
+    const mins = Number(config.timerMinutes) || 60;
     endTime = Date.now() + mins * 60 * 1000;
     localStorage.setItem(STORAGE_KEY, String(endTime));
   }
@@ -36,8 +38,9 @@
     }
 
     if (config.showResetButton) {
-      document.getElementById('resetBtn').style.display = 'inline-block';
-      document.getElementById('resetBtn').onclick = function () {
+      const resetBtn = document.getElementById('resetBtn');
+      resetBtn.style.display = 'inline-block';
+      resetBtn.onclick = function () {
         setEndFromNow();
         document.getElementById('status').innerText = 'Timer reset';
       };
@@ -47,7 +50,7 @@
     intervalId = setInterval(tick, 1000);
   }
 
-  // ✅ Safe redirect function (works inside Genially)
+  // ✅ Safe redirect (works even inside Genially iframe)
   function redirectTo(url) {
     try {
       if (window.top !== window.self) {
@@ -56,7 +59,7 @@
         window.location.href = url;
       }
     } catch (err) {
-      console.log("Redirect blocked by sandbox. Showing manual link...");
+      console.log("⚠️ Redirect blocked by sandbox, showing manual button...");
       document.body.innerHTML = `
         <div style="display:flex;align-items:center;justify-content:center;height:100vh;text-align:center;">
           <div>
@@ -79,8 +82,10 @@
       document.getElementById('status').innerText = "TIME'S UP!";
 
       const audio = document.getElementById('timeUpSound');
-      audio.volume = 0.9;
-      audio.play().catch(() => console.log('Autoplay blocked'));
+      if (audio) {
+        audio.volume = 0.9;
+        audio.play().catch(() => console.log('Autoplay blocked'));
+      }
 
       setTimeout(() => {
         if (config.redirectTimeUp) redirectTo(config.redirectTimeUp);
@@ -91,6 +96,7 @@
     document.getElementById('minutes').innerText = formatMMSS(remaining);
   }
 
+  // ✅ Start
   (async function () {
     await loadConfig();
     initTimer();
