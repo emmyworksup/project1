@@ -3,123 +3,36 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Escape Room Timer</title>
+  <title>Countdown Timer</title>
   <style>
     body {
-      background: transparent;
-      color: white;
-      font-family: 'Arial', sans-serif;
+      background-color: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
       display: flex;
-      align-items: center;
+      flex-direction: column;
       justify-content: center;
+      align-items: center;
       height: 100vh;
-      margin: 0;
+      text-align: center;
     }
-    #minutes {
-      font-size: 4rem;
+    #timer {
+      font-size: 5rem;
       font-weight: bold;
-      text-shadow: 0 0 10px rgba(255,255,255,0.6);
+      color: #ff4444;
     }
-    #status {
-      display: none;
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <div>
-    <div id="minutes">60:00</div>
-    <div id="status"></div>
-  </div>
+  <div id="timer">Loading...</div>
+  <button id="resetBtn" style="display:none;">Reset Timer</button>
 
-  <audio id="timeUpSound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
-
-  <script>
-    const CONFIG_PATH = 'config.json';
-    const STORAGE_KEY = 'escapeRoomEndTime_v1';
-    let config = { timerMinutes: 60, redirectTimeUp: '', showResetButton: false };
-    let endTime = null;
-    let intervalId = null;
-
-    async function loadConfig() {
-      try {
-        const res = await fetch(CONFIG_PATH + '?t=' + Date.now());
-        const j = await res.json();
-        config = Object.assign(config, j || {});
-      } catch (e) {
-        console.warn('Could not load config.json, using defaults', e);
-      }
-    }
-
-    function formatMMSS(totalSec) {
-      const m = Math.floor(totalSec / 60);
-      const s = totalSec % 60;
-      return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-    }
-
-    function setEndFromNow() {
-      const mins = Number(config.timerMinutes) || 60;
-      endTime = Date.now() + mins * 60 * 1000;
-      localStorage.setItem(STORAGE_KEY, String(endTime));
-    }
-
-    function initTimer() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) {
-        setEndFromNow();
-      } else {
-        endTime = Number(saved);
-      }
-      tick();
-      intervalId = setInterval(tick, 1000);
-    }
-
-    // ✅ Safe redirect for Genially iframe
-    function redirectTo(url) {
-      try {
-        if (window.top !== window.self) {
-          window.top.location.href = url;
-        } else {
-          window.location.href = url;
-        }
-      } catch (err) {
-        document.body.innerHTML = `
-          <div style="display:flex;align-items:center;justify-content:center;height:100vh;text-align:center;">
-            <div>
-              <h2 style="color:#d33;">⏰ Time’s Up!</h2>
-              <p style="margin:10px 0;">Click below to continue</p>
-              <a href="${url}" target="_top" style="font-size:18px;background:#008000;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;">Go to Next Page</a>
-            </div>
-          </div>`;
-      }
-    }
-
-    function tick() {
-      const now = Date.now();
-      const remaining = Math.floor((endTime - now) / 1000);
-
-      if (remaining <= 0) {
-        clearInterval(intervalId);
-        localStorage.removeItem(STORAGE_KEY);
-        document.getElementById('minutes').innerText = '00:00';
-
-        const audio = document.getElementById('timeUpSound');
-        audio.volume = 0.9;
-        audio.play().catch(() => console.log('Autoplay blocked'));
-
-        // ⏰ Redirect to Time's Up page
-        setTimeout(() => {
-          if (config.redirectTimeUp) redirectTo(config.redirectTimeUp);
-        }, 2000);
-        return;
-      }
-
-      document.getElementById('minutes').innerText = formatMMSS(remaining);
-    }
-
-    (async function () {
-      await loadConfig();
-      initTimer();
-    })();
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
