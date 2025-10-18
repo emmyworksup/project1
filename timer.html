@@ -1,104 +1,160 @@
-<script>
-  const CONFIG_PATH = 'config.json'; // config file (same folder as timer.html)
-  const STORAGE_KEY = 'escapeRoomEndTime_v1';
-  let config = { timerMinutes: 60, redirectTimeUp: '', showResetButton: false };
-  let endTime = null;
-  let intervalId = null;
-
-  // ✅ Load settings from config.json
-  async function loadConfig() {
-    try {
-      const res = await fetch(CONFIG_PATH + '?t=' + Date.now());
-      const j = await res.json();
-      config = Object.assign(config, j || {});
-      console.log('✅ Config loaded:', config);
-    } catch (e) {
-      console.warn('⚠️ Could not load config.json, using defaults', e);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Escape Room Timer</title>
+  <style>
+    body {
+      background: transparent;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
     }
-  }
-
-  function formatMMSS(totalSec) {
-    const m = Math.floor(totalSec / 60);
-    const s = totalSec % 60;
-    return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-  }
-
-  function setEndFromNow() {
-    const mins = Number(config.timerMinutes) || 60;
-    endTime = Date.now() + mins * 60 * 1000;
-    localStorage.setItem(STORAGE_KEY, String(endTime));
-  }
-
-  function initTimer() {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) {
-      setEndFromNow();
-    } else {
-      endTime = Number(saved);
+    #timerContainer {
+      background: rgba(0,0,0,0.6);
+      padding: 20px 40px;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 0 15px rgba(255,255,255,0.2);
     }
-
-    if (config.showResetButton) {
-      const resetBtn = document.getElementById('resetBtn');
-      resetBtn.style.display = 'inline-block';
-      resetBtn.onclick = function () {
-        setEndFromNow();
-        document.getElementById('status').innerText = 'Timer reset';
-      };
+    #minutes {
+      font-size: 3rem;
+      font-weight: bold;
+      letter-spacing: 2px;
     }
+    #status {
+      margin-top: 10px;
+      font-size: 1.1rem;
+      color: #ccc;
+    }
+    #resetBtn {
+      display: none;
+      margin-top: 15px;
+      padding: 8px 16px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      background: #008000;
+      color: white;
+      cursor: pointer;
+    }
+    #resetBtn:hover {
+      background: #00a000;
+    }
+  </style>
+</head>
+<body>
+  <div id="timerContainer">
+    <div id="minutes">00:00</div>
+    <div id="status">Timer starting...</div>
+    <button id="resetBtn">Reset Timer</button>
+  </div>
 
-    tick();
-    intervalId = setInterval(tick, 1000);
-  }
+  <audio id="timeUpSound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
 
-  // ✅ Safe redirect (works even inside Genially iframe)
-  function redirectTo(url) {
-    try {
-      if (window.top !== window.self) {
-        window.top.location.href = url;
-      } else {
-        window.location.href = url;
+  <script>
+    const CONFIG_PATH = 'config.json';
+    const STORAGE_KEY = 'escapeRoomEndTime_v1';
+    let config = { timerMinutes: 60, redirectTimeUp: '', showResetButton: false };
+    let endTime = null;
+    let intervalId = null;
+
+    async function loadConfig() {
+      try {
+        const res = await fetch(CONFIG_PATH + '?t=' + Date.now());
+        const j = await res.json();
+        config = Object.assign(config, j || {});
+      } catch (e) {
+        console.warn('Could not load config.json, using defaults', e);
       }
-    } catch (err) {
-      console.log("⚠️ Redirect blocked by sandbox, showing manual button...");
-      document.body.innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:center;height:100vh;text-align:center;">
-          <div>
-            <h2 style="color:#d33;">⏰ Time’s Up!</h2>
-            <p style="margin:10px 0;">Click below to continue</p>
-            <a href="${url}" target="_blank" style="font-size:18px;background:#008000;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;">Go to Next Page</a>
-          </div>
-        </div>`;
     }
-  }
 
-  function tick() {
-    const now = Date.now();
-    const remaining = Math.floor((endTime - now) / 1000);
+    function formatMMSS(totalSec) {
+      const m = Math.floor(totalSec / 60);
+      const s = totalSec % 60;
+      return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }
 
-    if (remaining <= 0) {
-      clearInterval(intervalId);
-      localStorage.removeItem(STORAGE_KEY);
-      document.getElementById('minutes').innerText = '00:00';
-      document.getElementById('status').innerText = "TIME'S UP!";
+    function setEndFromNow() {
+      const mins = Number(config.timerMinutes) || 60;
+      endTime = Date.now() + mins * 60 * 1000;
+      localStorage.setItem(STORAGE_KEY, String(endTime));
+    }
 
-      const audio = document.getElementById('timeUpSound');
-      if (audio) {
+    function initTimer() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) {
+        setEndFromNow();
+      } else {
+        endTime = Number(saved);
+      }
+
+      if (config.showResetButton) {
+        document.getElementById('resetBtn').style.display = 'inline-block';
+        document.getElementById('resetBtn').onclick = function () {
+          setEndFromNow();
+          document.getElementById('status').innerText = 'Timer reset';
+        };
+      }
+
+      tick();
+      intervalId = setInterval(tick, 1000);
+    }
+
+    function redirectTo(url) {
+      try {
+        if (window.top !== window.self) {
+          window.top.location.href = url;
+        } else {
+          window.location.href = url;
+        }
+      } catch (err) {
+        console.log("Redirect blocked by sandbox. Showing manual link...");
+        document.body.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:center;height:100vh;text-align:center;">
+            <div>
+              <h2 style="color:#d33;">⏰ Time’s Up!</h2>
+              <p style="margin:10px 0;">Click below to continue</p>
+              <a href="${url}" target="_top" style="font-size:18px;background:#008000;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;">Go to Next Page</a>
+            </div>
+          </div>`;
+      }
+    }
+
+    function tick() {
+      const now = Date.now();
+      const remaining = Math.floor((endTime - now) / 1000);
+
+      if (remaining <= 0) {
+        clearInterval(intervalId);
+        localStorage.removeItem(STORAGE_KEY);
+        document.getElementById('minutes').innerText = '00:00';
+        document.getElementById('status').innerText = "TIME'S UP!";
+
+        const audio = document.getElementById('timeUpSound');
         audio.volume = 0.9;
         audio.play().catch(() => console.log('Autoplay blocked'));
+
+        setTimeout(() => {
+          if (config.redirectTimeUp) redirectTo(config.redirectTimeUp);
+        }, 2000);
+        return;
       }
 
-      setTimeout(() => {
-        if (config.redirectTimeUp) redirectTo(config.redirectTimeUp);
-      }, 2000);
-      return;
+      document.getElementById('minutes').innerText = formatMMSS(remaining);
+      document.getElementById('status').innerText = "Counting down...";
     }
 
-    document.getElementById('minutes').innerText = formatMMSS(remaining);
-  }
-
-  // ✅ Start
-  (async function () {
-    await loadConfig();
-    initTimer();
-  })();
-</script>
+    (async function () {
+      await loadConfig();
+      initTimer();
+    })();
+  </script>
+</body>
+</html>
