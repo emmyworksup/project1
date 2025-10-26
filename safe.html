@@ -16,7 +16,6 @@
     .actions{display:flex;justify-content:space-between;margin-top:14px}
     .btn{background:#444;color:#fff;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600}
     #msg{margin-top:10px;height:18px;color:#d33;font-weight:600}
-    .disabled{opacity:.45;pointer-events:none}
   </style>
 </head>
 <body>
@@ -28,21 +27,22 @@
     </div>
     <div class="actions">
       <button id="clear" class="btn">Clear</button>
-      <button id="submit" class="btn disabled">Enter</button>
+      <button id="submit" class="btn">Enter</button>
     </div>
     <div id="msg"></div>
   </div>
 
   <script>
-    const CONFIG_PATH = 'config.json';
-    let cfg = null;
+    const SAFE_CODE = "1234"; 
+    const SUCCESS_URL = "https://view.genially.com/685856038f02a2a3b61b01ac/interactive-content-copy-escape-room-kommunen?page=21";
+    const FAIL_URL = "https://view.genially.com/685856038f02a2a3b61b01ac/interactive-content-copy-escape-room-kommunen?page=20";
+
     const display = document.getElementById('display');
     const keypad = document.getElementById('keypad');
     const msg = document.getElementById('msg');
     const submitBtn = document.getElementById('submit');
     const clearBtn = document.getElementById('clear');
 
-    // keypad layout
     const keys = ['1','2','3','4','5','6','7','8','9','0'];
     keys.forEach(k => {
       const b = document.createElement('button');
@@ -59,70 +59,33 @@
 
     clearBtn.addEventListener('click', () => { display.value = ''; msg.textContent = ''; });
 
-    // load config and normalize safeCode to string
-    async function loadConfig(){
-      try {
-        const r = await fetch(CONFIG_PATH + '?t=' + Date.now());
-        cfg = await r.json();
-        // guarantee cfg.safeCode is a string
-        cfg.safeCode = (cfg.safeCode === undefined || cfg.safeCode === null) ? '' : String(cfg.safeCode);
-        console.log('Config loaded:', cfg);
-        // enable submit now
-        submitBtn.classList.remove('disabled');
-      } catch (err) {
-        console.error('Failed to load config.json', err);
-        msg.textContent = 'Config load error';
-      }
-    }
-
-    async function checkCode(){
-      if (!cfg) {
-        msg.textContent = 'Not ready yet';
-        return;
-      }
-      const val = (display.value || '').trim();
-      console.log('Entered:', val, 'Expected:', cfg.safeCode);
+    function checkCode(){
+      const val = display.value.trim();
       if (val.length !== 4) {
-        msg.style.color = '#d33';
         msg.textContent = 'Enter 4 digits';
+        msg.style.color = '#d33';
         return;
       }
 
-      if (val === String(cfg.safeCode)) {
+      if (val === SAFE_CODE) {
         msg.style.color = '#1b8a3e';
         msg.textContent = '✅ Correct — redirecting...';
-        // short delay for UX
         setTimeout(() => {
-          if (cfg.redirectSafeSuccess) {
-            try { top.location.href = cfg.redirectSafeSuccess; return; } catch(e){}
-            window.location.href = cfg.redirectSafeSuccess;
-          } else {
-            console.warn('redirectSafeSuccess not set in config.json');
-          }
+          try { top.location.href = SUCCESS_URL; } catch(e){ window.location.href = SUCCESS_URL; }
         }, 500);
       } else {
         msg.style.color = '#d33';
         msg.textContent = '❌ Wrong code';
         setTimeout(() => {
-          if (cfg.redirectSafeFail) {
-            try { top.location.href = cfg.redirectSafeFail; return; } catch(e){}
-            window.location.href = cfg.redirectSafeFail;
-          } else {
-            display.value = '';
-            msg.textContent = '';
-          }
+          try { top.location.href = FAIL_URL; } catch(e){ window.location.href = FAIL_URL; }
         }, 500);
       }
     }
 
-    // allow Enter key
+    submitBtn.addEventListener('click', checkCode);
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') checkCode();
     });
-
-    submitBtn.addEventListener('click', checkCode);
-
-    loadConfig();
   </script>
 </body>
 </html>
