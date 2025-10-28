@@ -5,71 +5,138 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Timer</title>
   <style>
-    :root {
-      --box-bg: rgba(0,0,0,0.35);
+    :root{
+      --box-bg: rgba(0,0,0,0.45);
       --text: #ffffff;
-      --radius: 8px;
-      --padding: 10px 14px;
-      --font: 16px/1 "Arial", sans-serif;
+      --radius: 10px;
+      --padding: 8px 12px;
+      --font: 15px/1 "Arial",sans-serif;
     }
-
-    html, body {
-      height: 100%;
-      margin: 0;
-      background: transparent;
-    }
-
-    #timerBox {
+    html,body{height:100%;margin:0;background:transparent}
+    /* small Genially-like transparent box */
+    #timerBox{
       position: fixed;
-      top: 16px;
-      right: 16px;
+      top: 14px;
+      right: 14px;
       background: var(--box-bg);
       color: var(--text);
       padding: var(--padding);
       border-radius: var(--radius);
       font: var(--font);
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-      z-index: 9999;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      box-shadow:0 2px 10px rgba(0,0,0,0.25);
+      z-index:999999;
+      -webkit-font-smoothing:antialiased;
     }
-
-    #minutes {
-      font-weight: 700;
-      font-size: 18px;
-      letter-spacing: 1px;
+    #minutes{font-weight:700;font-size:18px;letter-spacing:1px}
+    #status{font-size:12px;display:none}
+    /* full-screen fallback UI */
+    #fallback {
+      display:none;
+      position:fixed; inset:0; background:#fff; z-index:1000000;
+      align-items:center; justify-content:center; text-align:center; padding:20px;
     }
+    #fallback a { display:inline-block; margin-top:12px; background:#008000; color:#fff; padding:12px 18px; border-radius:8px; text-decoration:none; font-weight:700 }
   </style>
 </head>
 <body>
-  <div id="timerBox">
-    <div id="minutes">60:00</div>
+  <div id="timerBox" role="status" aria-live="polite">
+    <div id="minutes">--:--</div>
+    <div id="status"></div>
+  </div>
+
+  <div id="fallback" aria-hidden="true">
+    <div>
+      <h2 style="margin:0 0 8px;color:#222">⏰ Time's up!</h2>
+      <p style="margin:0 0 12px;color:#444">Click the button below to continue to the Time-Up page.</p>
+      <a id="fallbackLink" href="#" target="_top" rel="noopener">Go to Time’s Up page</a>
+    </div>
   </div>
 
   <script>
-    let duration = 60 * 60; // 60 minutes
-    const timerDisplay = document.getElementById("minutes");
+  (function(){
+    const CONFIG_PATH = 'config.json';
+    const DEFAULT_MINUTES = 60;
+    const DEFAULT_REDIRECT = "https://view.genially.com/685856038f02a2a3b61b01ac/interactive-content-copy-escape-room-kommunen";
 
-    // redirect link after time runs out
-    const redirectUrl = "https://view.genially.com/685856038f02a2a3b61b01ac/interactive-content-copy-escape-room-kommunen";
+    let duration = DEFAULT_MINUTES * 60; // seconds
+    let redirectUrl = DEFAULT_REDIRECT;
 
-    function updateTimer() {
-      const minutes = Math.floor(duration / 60);
-      const seconds = duration % 60;
-      timerDisplay.textContent = 
-        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-
-      if (duration <= 0) {
-        // redirect to time up page
-        window.top.location.href = redirectUrl;
-      } else {
-        duration--;
-        setTimeout(updateTimer, 1000);
+    // try to load config.json (if exists) to allow easy edits
+    async function loadConfig(){
+      try {
+        const r = await fetch(CONFIG_PATH + '?t=' + Date.now());
+        if (!r.ok) throw new Error('no config');
+        const cfg = await r.json();
+        if (cfg && Number(cfg.timerMinutes)) {
+          duration = Number(cfg.timerMinutes) * 60;
+        }
+        if (cfg && cfg.redirectTimeUp) {
+          redirectUrl = String(cfg.redirectTimeUp);
+        }
+      } catch(e){
+        // no config.json or failed — keep defaults
       }
     }
 
-    updateTimer();
+    function formatMMSS(sec){
+      sec = Math.max(0, Math.floor(sec));
+      const m = Math.floor(sec/60);
+      const s = sec % 60;
+      return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    }
+
+    function tryRedirect(url){
+      // Try top window (preferred), fallback to parent, fallback to self
+      try { if (window.top && window.top !== window) { window.top.location.href = url; return true; } } catch(e){}
+      try { if (window.parent && window.parent !== window) { window.parent.location.href = url; return true; } } catch(e){}
+      try { window.location.href = url; return true; } catch(e){}
+      return false;
+    }
+
+    function showFallback(url){
+      const fb = document.getElementById('fallback');
+      const link = document.getElementById('fallbackLink');
+      link.href = url;
+      fb.style.display = 'flex';
+      fb.setAttribute('aria-hidden','false');
+      // also overlay timer box visually (so user sees)
+      document.getElementById('timerBox').style.display = 'none';
+    }
+
+    async function start(){
+      await loadConfig();
+      const display = document.getElementById('minutes');
+      const status = document.getElementById('status');
+
+      // immediate render
+      display.textContent = formatMMSS(duration);
+
+      const tick = () => {
+        if (duration <= 0) {
+          status.style.display = 'block';
+          status.textContent = "TIME'S UP!";
+          // brief delay for UX
+          setTimeout(() => {
+            const ok = tryRedirect(redirectUrl);
+            if (!ok) {
+              showFallback(redirectUrl); // if redirect blocked, show clickable UI
+            }
+          }, 600); // small pause so user sees "TIME'S UP!"
+          return;
+        }
+        duration--;
+        display.textContent = formatMMSS(duration);
+        setTimeout(tick, 1000);
+      };
+
+      setTimeout(tick, 1000);
+    }
+
+    start();
+  })();
   </script>
 </body>
 </html>
