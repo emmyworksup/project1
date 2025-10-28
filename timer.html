@@ -2,90 +2,74 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Safe Lock</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Timer</title>
   <style>
-    body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;background:#fff;font-family:Arial,Helvetica,sans-serif}
-    .safe-container{width:320px;text-align:center;padding:22px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.08);background:#fff}
-    h2{margin:0 0 12px;color:#222}
-    .display{width:100%;height:46px;border:1px solid #222;border-radius:8px;margin-bottom:14px;font-size:1.4rem;text-align:center;letter-spacing:8px;background:#fff}
-    .keypad-area{background:#2ecc71;padding:16px;border-radius:10px}
-    .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;justify-items:center}
-    .key{width:62px;height:62px;border-radius:50%;background:#000;color:#fff;border:none;font-weight:700;font-size:1.15rem;cursor:pointer}
-    .key:active{transform:scale(.97)}
-    .actions{display:flex;justify-content:space-between;margin-top:14px}
-    .btn{background:#444;color:#fff;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600}
-    #msg{margin-top:10px;height:18px;color:#d33;font-weight:600}
+    :root {
+      --box-bg: rgba(0,0,0,0.35);
+      --text: #ffffff;
+      --radius: 8px;
+      --padding: 10px 14px;
+      --font: 16px/1 "Arial", sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: transparent;
+    }
+
+    #timerBox {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      background: var(--box-bg);
+      color: var(--text);
+      padding: var(--padding);
+      border-radius: var(--radius);
+      font: var(--font);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      z-index: 9999;
+    }
+
+    #minutes {
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: 1px;
+    }
   </style>
 </head>
 <body>
-  <div class="safe-container">
-    <h2>Enter 4-Digit Code</h2>
-    <input id="display" class="display" type="text" readonly maxlength="4" />
-    <div class="keypad-area">
-      <div id="keypad" class="keypad"></div>
-    </div>
-    <div class="actions">
-      <button id="clear" class="btn">Clear</button>
-      <button id="submit" class="btn">Enter</button>
-    </div>
-    <div id="msg"></div>
+  <div id="timerBox">
+    <div id="minutes">60:00</div>
   </div>
 
   <script>
-    const SAFE_CODE = "1234"; 
-    const SUCCESS_URL = "https://view.genially.com/685856038f02a2a3b61b01ac/interactive-content-copy-escape-room-kommunen?page=21";
-    const FAIL_URL = "https://view.genially.com/685856038f02a2a3b61b01ac/interactive-content-copy-escape-room-kommunen?page=20";
+    let duration = 60 * 60; // 60 minutes
+    const timerDisplay = document.getElementById("minutes");
 
-    const display = document.getElementById('display');
-    const keypad = document.getElementById('keypad');
-    const msg = document.getElementById('msg');
-    const submitBtn = document.getElementById('submit');
-    const clearBtn = document.getElementById('clear');
+    // redirect link after time runs out
+    const redirectUrl = "https://view.genially.com/685856038f02a2a3b61b01ac/interactive-content-copy-escape-room-kommunen";
 
-    const keys = ['1','2','3','4','5','6','7','8','9','0'];
-    keys.forEach(k => {
-      const b = document.createElement('button');
-      b.className = 'key';
-      b.textContent = k;
-      b.addEventListener('click', () => {
-        if (display.value.length < 4) {
-          display.value += k;
-          msg.textContent = '';
-        }
-      });
-      keypad.appendChild(b);
-    });
+    function updateTimer() {
+      const minutes = Math.floor(duration / 60);
+      const seconds = duration % 60;
+      timerDisplay.textContent = 
+        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-    clearBtn.addEventListener('click', () => { display.value = ''; msg.textContent = ''; });
-
-    function checkCode(){
-      const val = display.value.trim();
-      if (val.length !== 4) {
-        msg.textContent = 'Enter 4 digits';
-        msg.style.color = '#d33';
-        return;
-      }
-
-      if (val === SAFE_CODE) {
-        msg.style.color = '#1b8a3e';
-        msg.textContent = '✅ Correct — redirecting...';
-        setTimeout(() => {
-          try { top.location.href = SUCCESS_URL; } catch(e){ window.location.href = SUCCESS_URL; }
-        }, 500);
+      if (duration <= 0) {
+        // redirect to time up page
+        window.top.location.href = redirectUrl;
       } else {
-        msg.style.color = '#d33';
-        msg.textContent = '❌ Wrong code';
-        setTimeout(() => {
-          try { top.location.href = FAIL_URL; } catch(e){ window.location.href = FAIL_URL; }
-        }, 500);
+        duration--;
+        setTimeout(updateTimer, 1000);
       }
     }
 
-    submitBtn.addEventListener('click', checkCode);
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') checkCode();
-    });
+    updateTimer();
   </script>
 </body>
 </html>
