@@ -5,17 +5,93 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Safe Lock</title>
   <style>
-    body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;background:#fff;font-family:Arial,Helvetica,sans-serif}
-    .safe-container{width:320px;text-align:center;padding:22px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.08);background:#fff}
-    h2{margin:0 0 12px;color:#222}
-    .display{width:100%;height:46px;border:1px solid #222;border-radius:8px;margin-bottom:14px;font-size:1.4rem;text-align:center;letter-spacing:8px;background:#fff}
-    .keypad-area{background:#2ecc71;padding:16px;border-radius:10px}
-    .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;justify-items:center}
-    .key{width:62px;height:62px;border-radius:50%;background:#000;color:#fff;border:none;font-weight:700;font-size:1.15rem;cursor:pointer}
-    .key:active{transform:scale(.97)}
-    .actions{display:flex;justify-content:space-between;margin-top:14px}
-    .btn{background:#444;color:#fff;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600}
-    #msg{margin-top:10px;height:18px;color:#d33;font-weight:600}
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .safe-container {
+      width: 320px;
+      text-align: center;
+      padding: 22px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      background: #fff;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      color: #222;
+    }
+
+    .display {
+      width: 100%;
+      height: 46px;
+      border: 1px solid #222;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      font-size: 1.4rem;
+      text-align: center;
+      letter-spacing: 8px;
+      background: #fff;
+    }
+
+    .keypad-area {
+      background: #2ecc71;
+      padding: 16px;
+      border-radius: 10px;
+    }
+
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      justify-items: center;
+    }
+
+    .key {
+      width: 62px;
+      height: 62px;
+      border-radius: 50%;
+      background: #000;
+      color: #fff;
+      border: none;
+      font-weight: 700;
+      font-size: 1.15rem;
+      cursor: pointer;
+    }
+
+    .key:active {
+      transform: scale(.97);
+    }
+
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 14px;
+    }
+
+    .btn {
+      background: #444;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    #msg {
+      margin-top: 10px;
+      height: 18px;
+      color: #d33;
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -33,7 +109,9 @@
   </div>
 
   <script>
-    const SAFE_CODE = "1234"; 
+    const SAFE_CODE = "1234";
+
+    // ✅ Correct Success & Fail URLs
     const SUCCESS_URL = "https://view.genially.com/685856038f02a2a3b61b01ac/interactive-content-copy-escape-room-kommunen?page=21";
     const FAIL_URL = "https://view.genially.com/685856038f02a2a3b61b01ac/interactive-content-copy-escape-room-kommunen?page=20";
 
@@ -43,6 +121,7 @@
     const submitBtn = document.getElementById('submit');
     const clearBtn = document.getElementById('clear');
 
+    // create keypad buttons
     const keys = ['1','2','3','4','5','6','7','8','9','0'];
     keys.forEach(k => {
       const b = document.createElement('button');
@@ -57,7 +136,10 @@
       keypad.appendChild(b);
     });
 
-    clearBtn.addEventListener('click', () => { display.value = ''; msg.textContent = ''; });
+    clearBtn.addEventListener('click', () => { 
+      display.value = ''; 
+      msg.textContent = ''; 
+    });
 
     function checkCode(){
       const val = display.value.trim();
@@ -71,14 +153,16 @@
         msg.style.color = '#1b8a3e';
         msg.textContent = '✅ Correct — redirecting...';
         setTimeout(() => {
-          try { top.location.href = SUCCESS_URL; } catch(e){ window.location.href = SUCCESS_URL; }
-        }, 500);
+          try { window.top.location.href = SUCCESS_URL; } 
+          catch(e){ window.location.href = SUCCESS_URL; }
+        }, 800);
       } else {
         msg.style.color = '#d33';
         msg.textContent = '❌ Wrong code';
         setTimeout(() => {
-          try { top.location.href = FAIL_URL; } catch(e){ window.location.href = FAIL_URL; }
-        }, 500);
+          try { window.top.location.href = FAIL_URL; } 
+          catch(e){ window.location.href = FAIL_URL; }
+        }, 800);
       }
     }
 
