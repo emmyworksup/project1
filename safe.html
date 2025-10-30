@@ -111,7 +111,7 @@
   <script>
     const SAFE_CODE = "1234";
 
-    // ✅ Correct Success & Fail URLs
+    // ✅ Correct redirection URLs
     const SUCCESS_URL = "https://view.genially.com/685856038f02a2a3b61b01ac/interactive-content-copy-escape-room-kommunen?page=21";
     const FAIL_URL = "https://view.genially.com/685856038f02a2a3b61b01ac/interactive-content-copy-escape-room-kommunen?page=20";
 
@@ -141,7 +141,7 @@
       msg.textContent = ''; 
     });
 
-    function checkCode(){
+    function checkCode() {
       const val = display.value.trim();
       if (val.length !== 4) {
         msg.textContent = 'Enter 4 digits';
@@ -158,7 +158,7 @@
         }, 800);
       } else {
         msg.style.color = '#d33';
-        msg.textContent = '❌ Wrong code';
+        msg.textContent = '❌ Incorrect code';
         setTimeout(() => {
           try { window.top.location.href = FAIL_URL; } 
           catch(e){ window.location.href = FAIL_URL; }
